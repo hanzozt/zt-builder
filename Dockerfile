@@ -72,11 +72,17 @@ RUN curl -sSLf https://apt.llvm.org/llvm-snapshot.gpg.key \
     && chmod +r /usr/share/keyrings/llvm-snapshot.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/llvm-snapshot.gpg] http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main" > /etc/apt/sources.list.d/llvm-snapshot.list
 
+RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | gpg --dearmor --output /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod +r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
+
 # re-added git ppa because cmake failed to find git version tag on focal runner
 RUN add-apt-repository ppa:git-core/ppa \
     && apt-get update \
     && apt-get --yes --quiet --no-install-recommends install \
         git \
+        gh \
         clang-17 \
         clang-tidy-17 \
     && apt-get --yes autoremove \
