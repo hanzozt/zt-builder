@@ -49,9 +49,10 @@ RUN apt-get update \
         libssl-dev \
         libsystemd-dev \
         libtool \
-        ninja-build \
         pkg-config \
         python3 \
+        python3-setuptools \
+        python3-wheel \
         python3-pip \
         python3.8 \
         software-properties-common \
@@ -65,7 +66,8 @@ RUN apt-get update \
     && rm -fr /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 
 # provides patch releases for 1.11 in /usr/local/bin/ninja
-RUN python3.8 -m pip install ninja~=${NINJA_MINOR_VERSION}
+RUN python3.8 -m pip install --upgrade pip setuptools wheel \
+    && python3.8 -m pip install ninja~=${NINJA_MINOR_VERSION}
 
 # set python alternative to python3.8 because there's no OS contract for "python", while preserving python3 at 3.6
 # because distro tooling does expect 3.6
