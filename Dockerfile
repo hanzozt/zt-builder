@@ -4,12 +4,15 @@
 # pin the cmake version to ensure repeatable builds
 ARG CMAKE_VERSION="3.26.3"
 ARG VCPKG_VERSION="2024.03.25"
+# patch releases are automatically accepted by pip install ninja~=1.11.0
+ARG NINJA_MINOR_VERSION="1.11.0"
 
-# Ubuntu Bionic 20.04 LTS has GLIBC 2.31
-FROM ubuntu:focal
+# Ubuntu Bionic 18.04 LTS has GLIBC 2.27
+FROM ubuntu:bionic
 
 ARG CMAKE_VERSION
 ARG VCPKG_VERSION
+ARG NINJA_MINOR_VERSION
 ARG XDG_CONFIG_HOME
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -39,11 +42,7 @@ RUN apt-get update \
         doxygen \
         expect \
         flex \
-        g++-arm-linux-gnueabihf \
-        gcc-aarch64-linux-gnu \
-        gcc-arm-linux-gnueabihf \
         gcovr \
-        git \
         gpg \
         graphviz \
         libcap-dev \
@@ -52,6 +51,7 @@ RUN apt-get update \
         libtool \
         ninja-build \
         pkg-config \
+        python3 \
         python3.8 \
         python3-pip \
         software-properties-common \
@@ -81,10 +81,13 @@ RUN PY3_BIN="" \
 RUN curl -sSLf https://apt.llvm.org/llvm-snapshot.gpg.key \
     | gpg --dearmor --output /usr/share/keyrings/llvm-snapshot.gpg \
     && chmod +r /usr/share/keyrings/llvm-snapshot.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/llvm-snapshot.gpg] http://apt.llvm.org/focal/ llvm-toolchain-focal-17 main" > /etc/apt/sources.list.d/llvm-snapshot.list
+    && echo "deb [signed-by=/usr/share/keyrings/llvm-snapshot.gpg] http://apt.llvm.org/bionic/ llvm-toolchain-bionic-17 main" > /etc/apt/sources.list.d/llvm-snapshot.list
 
-RUN apt-get update \
+# when we migrate this builder to focal or newer, just remove this ppa and the rest should work
+RUN add-apt-repository ppa:git-core/ppa \
+    && apt-get update \
     && apt-get --yes --quiet --no-install-recommends install \
+        git \
         clang-17 \
         clang-tidy-17 \
     && apt-get --yes autoremove \
