@@ -94,7 +94,8 @@ jobs:
           tags: |
             # set latest tag for default branch "main"
             type=raw,value=main,enable={{is_default_branch}}
-            type=ref,event=branch,enable=${{ startsWith(github.ref, 'refs/heads/v') }}
+            type=raw,value=${{ github.ref_name }}-dev,enable=${{ startsWith(github.ref, 'refs/heads/v') }}
+            type=sha,format=short,prefix=${{ github.ref_name }}-,enable=${{ startsWith(github.ref, 'refs/heads/v') }}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && steps.version_check.outputs.is_highest == 'true' }}
             # publish semver release tags
             type=semver,pattern={{version}},enable=${{startsWith(github.ref, 'refs/tags/v')}}
