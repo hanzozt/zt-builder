@@ -7,12 +7,12 @@ name: Docker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "v*" ]
     tags: 
       # Publish semver tags as releases.
       - 'v*.*.*'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "v*" ]
 
 env:
   REGISTRY: docker.io
@@ -58,18 +58,47 @@ jobs:
 
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
+      - name: Check if current tag is highest semver
+        id: version_check
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          current="${GITHUB_REF_NAME}"
+          highest_published="$(gh release list --repo "${GITHUB_REPOSITORY}" --limit 500 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V \
+            | tail -n 1 || true)"
+
+          if [ -z "${highest_published}" ]; then
+            echo "is_highest=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # On tag-push workflows, the current tag may not be a published GitHub Release yet.
+          # Compare against the published highest by including the current tag in the sort.
+          highest_candidate="$(printf '%s\n%s\n' "${highest_published}" "${current}" | sort -V | tail -n 1)"
+          if [ "${highest_candidate}" = "${current}" ]; then
+            echo "is_highest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_highest=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             # set tag "main" for default branch
             type=raw,value=main,enable={{is_default_branch}}
-
-            # set tag "latest" for semver tags
-            type=raw,value=latest,enable=${{startsWith(github.ref, 'refs/tags/v')}}
-
+            type=raw,value=${{ github.ref_name }}-dev,enable=${{ startsWith(github.ref, 'refs/heads/v') }}
+            type=sha,format=short,prefix=${{ github.ref_name }}-,enable=${{ startsWith(github.ref, 'refs/heads/v') }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && steps.version_check.outputs.is_highest == 'true' }}
             # publish semver release tags
             type=semver,pattern={{version}},enable=${{startsWith(github.ref, 'refs/tags/v')}}
 
