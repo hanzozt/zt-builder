@@ -3,8 +3,13 @@
 This container image has CMake and other utilities and libraries installed for
 cross-compiling Ziti projects with GLIBC 2.27. The image is
 automatically published to Docker Hub as
-[openziti/ziti-builder:latest](https://hub.docker.com/r/openziti/ziti-builder) (and `:main`) when
-merging to main.
+[openziti/ziti-builder:main](https://hub.docker.com/r/openziti/ziti-builder) when merging to `main`.
+
+Finalized releases are published as semver tags (e.g. `v3.0.4`) and the Docker image is tagged accordingly (e.g. `:3.0.4`, `:v3`). The `:latest` tag is only updated for the highest semver release.
+
+Maintenance releases are produced from major-version branches (e.g. `v1`). Branch builds publish preview tags (e.g. `:v1-dev`, `:v1-<sha>`); the stable `:v1` tag is only updated when a finalized semver tag is pushed.
+
+See `RELEASING.md` for the complete release workflow.
 
 ## Developing this container image
 
@@ -38,7 +43,7 @@ docker run \
 
 ### Publish the image to Docker Hub
 
-1. Create a pull request targeting the `main` branch.
-1. Merge the pull request to `main`.
-1. Create a meaningful release tag in GitHub that matches the regex `v[0-9]+.[0-9]+.[0-9]+`.
-1. The release will trigger a GitHub Action that builds and publishes the image to Docker Hub.
+1. Create a pull request targeting `main` (current major line) or a maintenance branch like `v1`.
+1. Merge the pull request.
+1. Finalize a release by publishing a GitHub Release with a semver tag `vMAJOR.MINOR.PATCH`.
+1. The tag push triggers CI to build and publish the image to Docker Hub.
