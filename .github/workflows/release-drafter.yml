@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'v*'
 
 permissions:
   contents: read
@@ -20,9 +21,28 @@ jobs:
     steps:
       # Drafts your next Release notes as Pull Requests are merged into "main"
       - uses: release-drafter/release-drafter@v5
+        id: release_drafter
         # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
         with:
           config-name: release-drafter-template.yml
+          commitish: ${{ github.ref_name }}
         #   disable-autolabeler: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate drafted version matches major branch
+        if: ${{ startsWith(github.ref, 'refs/heads/v') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch_major="${GITHUB_REF_NAME#v}"
+          drafted_major='${{ steps.release_drafter.outputs.major_version }}'
+          if [ -z "${drafted_major}" ]; then
+            echo "release-drafter did not output major_version" >&2
+            exit 1
+          fi
+          if [ "${drafted_major}" != "${branch_major}" ]; then
+            echo "Drafted release major v${drafted_major} does not match branch ${GITHUB_REF_NAME}." >&2
+            echo "Ensure the branch has an initial v${branch_major}.x.y release and that PR labels don't request a major bump." >&2
+            exit 1
+          fi
