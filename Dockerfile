@@ -67,10 +67,11 @@ RUN apt-get update \
 # provides patch releases for 1.11 in /usr/local/bin/ninja
 RUN python3 -m pip install ninja~=${NINJA_MINOR_VERSION}
 
-# set python alternative to python3.8
+# set python alternative to python3.8 because there's no OS contract for "python", while preserving python3 at 3.6
+# because distro tooling does expect 3.6
 RUN PY3_BIN="" \
-    && if [ -x /usr/bin/python3 ]; then PY3_BIN=/usr/bin/python3; fi \
-    && if [ -z "$PY3_BIN" ] && [ -x /usr/bin/python3.8 ]; then PY3_BIN=/usr/bin/python3.8; fi \
+    && if [ -x /usr/bin/python3.8 ]; then PY3_BIN=/usr/bin/python3.8; fi \
+    && if [ -z "$PY3_BIN" ] && [ -x /usr/bin/python3 ]; then PY3_BIN=/usr/bin/python3; fi \
     && if [ -n "$PY3_BIN" ] && command -v update-alternatives >/dev/null 2>&1; then \
         update-alternatives --install /usr/bin/python python "$PY3_BIN" 10; \
         update-alternatives --set python "$PY3_BIN"; \
