@@ -25,7 +25,7 @@ jobs:
         # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
         with:
           config-name: release-drafter-template.yml
-          commitish: ${{ github.ref_name }}
+          commitish: refs/heads/${{ github.ref_name }}
         #   disable-autolabeler: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
