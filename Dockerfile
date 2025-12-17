@@ -51,7 +51,10 @@ RUN apt-get update \
         libtool \
         pkg-config \
         python3 \
+        python3-setuptools \
+        python3-wheel \
         python3-pip \
+        python3.8 \
         software-properties-common \
         tar \
         unzip \
@@ -63,7 +66,19 @@ RUN apt-get update \
     && rm -fr /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 
 # provides patch releases for 1.11 in /usr/local/bin/ninja
-RUN python3 -m pip install ninja~=${NINJA_MINOR_VERSION}
+RUN python3.8 -m pip install --upgrade pip setuptools wheel \
+    && python3.8 -m pip install ninja~=${NINJA_MINOR_VERSION}
+
+# set python alternative to python3.8 because there's no OS contract for "python", while preserving python3 at 3.6
+# because distro tooling does expect 3.6
+RUN PY3_BIN="" \
+    && if [ -x /usr/bin/python3.8 ]; then PY3_BIN=/usr/bin/python3.8; fi \
+    && if [ -z "$PY3_BIN" ] && [ -x /usr/bin/python3 ]; then PY3_BIN=/usr/bin/python3; fi \
+    && if [ -n "$PY3_BIN" ] && command -v update-alternatives >/dev/null 2>&1; then \
+        update-alternatives --install /usr/bin/python python "$PY3_BIN" 10; \
+        update-alternatives --set python "$PY3_BIN"; \
+    fi \
+    && if [ -n "$PY3_BIN" ] && [ ! -x /usr/bin/python ]; then ln -s "$PY3_BIN" /usr/bin/python; fi
 
 RUN curl -sSLf https://apt.llvm.org/llvm-snapshot.gpg.key \
     | gpg --dearmor --output /usr/share/keyrings/llvm-snapshot.gpg \
