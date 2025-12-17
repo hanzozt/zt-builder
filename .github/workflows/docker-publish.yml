@@ -67,7 +67,7 @@ jobs:
         run: |
           set -euxo pipefail
           current="${GITHUB_REF_NAME}"
-          highest_published="$(gh release list --repo "${GITHUB_REPOSITORY}" --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName' \
+          highest_published="$(gh release list --repo "${GITHUB_REPOSITORY}" --limit 500 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName' \
             | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
             | sort -V \
             | tail -n 1 || true)"
@@ -91,6 +91,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             # set tag "main" for default branch
             type=raw,value=main,enable={{is_default_branch}}
