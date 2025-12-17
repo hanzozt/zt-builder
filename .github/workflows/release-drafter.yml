@@ -19,9 +19,46 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "main"
-      - uses: release-drafter/release-drafter@v5
+      # Drafts your next Release notes as Pull Requests are merged into "main" or "v*" branches
+      - name: Compute next patch version for major branch
+        id: next_version
+        if: ${{ startsWith(github.ref, 'refs/heads/v') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          major="${GITHUB_REF_NAME#v}"
+          last="$(gh release list --repo "${GITHUB_REPOSITORY}" --exclude-drafts --json tagName --jq '.[].tagName' \
+            | grep -E "^v${major}\\.[0-9]+\\.[0-9]+$" \
+            | sort -V \
+            | tail -n 1 || true)"
+
+          if [ -z "${last}" ]; then
+            echo "No previous v${major}.*.* releases found; cannot compute next patch version." >&2
+            exit 1
+          fi
+
+          ver="${last#v}"
+          IFS='.' read -r maj min patch <<< "${ver}"
+          next_patch=$((patch + 1))
+          echo "version=${maj}.${min}.${next_patch}" >> "$GITHUB_OUTPUT"
+
+      - uses: release-drafter/release-drafter@v6
         id: release_drafter
+        if: ${{ startsWith(github.ref, 'refs/heads/v') }}
+        # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
+        with:
+          config-name: release-drafter-template.yml
+          commitish: refs/heads/${{ github.ref_name }}
+          version: ${{ steps.next_version.outputs.version }}
+        #   disable-autolabeler: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: release-drafter/release-drafter@v6
+        id: release_drafter_main
+        if: ${{ github.ref == 'refs/heads/main' }}
         # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
         with:
           config-name: release-drafter-template.yml
