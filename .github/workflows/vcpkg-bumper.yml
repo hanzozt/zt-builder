@@ -190,6 +190,7 @@ jobs:
 
           git fetch --no-tags origin main
           git checkout origin/main -- .github
+          git checkout origin/main -- *.md
 
           if git diff --quiet; then
             echo "has_changes=false" >> "${GITHUB_OUTPUT}"
