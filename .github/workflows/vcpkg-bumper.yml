@@ -7,15 +7,62 @@ on:
     - cron: 0 10 * * *
 
 jobs:
-  bump:
+  discover_bases:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
+    outputs:
+      base_branches: ${{ steps.discover.outputs.base_branches }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover base branches
+        id: discover
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          git fetch --prune --no-tags origin '+refs/heads/*:refs/remotes/origin/*'
+
+          DEFAULT_BRANCH="${DEFAULT_BRANCH:-}"
+          if [ -z "${DEFAULT_BRANCH}" ]; then
+            DEFAULT_BRANCH="$(git remote show origin | sed -n 's/^[[:space:]]*HEAD branch:[[:space:]]*//p' | head -n 1)"
+          fi
+          DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+
+          mapfile -t v_branches < <(git for-each-ref --format='%(refname:short)' 'refs/remotes/origin/v*' | sed 's#^origin/##' | sort -u)
+
+          bases=("${DEFAULT_BRANCH}")
+          for b in "${v_branches[@]}"; do
+            if [ "${b}" != "${DEFAULT_BRANCH}" ]; then
+              bases+=("${b}")
+            fi
+          done
+
+          json_bases="$(printf '%s\n' "${bases[@]}" | python3 -c 'import sys, json; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+          echo "base_branches=${json_bases}" >> "${GITHUB_OUTPUT}"
+
+  bump:
+    runs-on: ubuntu-latest
+    needs: discover_bases
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        base_branch: ${{ fromJson(needs.discover_bases.outputs.base_branches) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ matrix.base_branch }}
 
       - name: Find latest vcpkg version
         id: latest_vcpkg
@@ -54,7 +101,8 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ matrix.base_branch }}
           commit-message: bump vcpkg version to ${{ vars.VCPKG_VERSION || steps.latest_vcpkg.outputs.tag_name }}
           title: bump vcpkg version to ${{ vars.VCPKG_VERSION || steps.latest_vcpkg.outputs.tag_name }}
           body: update vcpkg to version ${{ vars.VCPKG_VERSION || steps.latest_vcpkg.outputs.tag_name }}
-          branch: update-vcpkg-${{ vars.VCPKG_VERSION || steps.latest_vcpkg.outputs.tag_name }}
+          branch: update-vcpkg-${{ vars.VCPKG_VERSION || steps.latest_vcpkg.outputs.tag_name }}-${{ matrix.base_branch }}
