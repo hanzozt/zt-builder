@@ -69,17 +69,6 @@ RUN apt-get update \
 RUN python3.8 -m pip install --upgrade pip setuptools wheel \
     && python3.8 -m pip install ninja~=${NINJA_MINOR_VERSION}
 
-# set python alternative to python3.8 because there's no OS contract for "python", while preserving python3 at 3.6
-# because distro tooling does expect 3.6
-RUN PY3_BIN="" \
-    && if [ -x /usr/bin/python3.8 ]; then PY3_BIN=/usr/bin/python3.8; fi \
-    && if [ -z "$PY3_BIN" ] && [ -x /usr/bin/python3 ]; then PY3_BIN=/usr/bin/python3; fi \
-    && if [ -n "$PY3_BIN" ] && command -v update-alternatives >/dev/null 2>&1; then \
-        update-alternatives --install /usr/bin/python python "$PY3_BIN" 10; \
-        update-alternatives --set python "$PY3_BIN"; \
-    fi \
-    && if [ -n "$PY3_BIN" ] && [ ! -x /usr/bin/python ]; then ln -s "$PY3_BIN" /usr/bin/python; fi
-
 RUN curl -sSLf https://apt.llvm.org/llvm-snapshot.gpg.key \
     | gpg --dearmor --output /usr/share/keyrings/llvm-snapshot.gpg \
     && chmod +r /usr/share/keyrings/llvm-snapshot.gpg \
@@ -119,6 +108,19 @@ RUN apt-get update \
     && apt-get --yes autoremove \
     && apt-get clean autoclean \
     && rm -fr /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+# set python alternative to python3.8 because there's no OS contract for "python", while preserving python3 at 3.6
+# because distro tooling does expect 3.6
+RUN PY3_BIN="" \
+    && if [ -x /usr/bin/python3.8 ]; then PY3_BIN=/usr/bin/python3.8; fi \
+    && if [ -z "$PY3_BIN" ] && [ -x /usr/bin/python3 ]; then PY3_BIN=/usr/bin/python3; fi \
+    && if [ -n "$PY3_BIN" ] && command -v update-alternatives >/dev/null 2>&1; then \
+        update-alternatives --install /usr/bin/python python "$PY3_BIN" 10; \
+        update-alternatives --set python "$PY3_BIN"; \
+        update-alternatives --install /usr/bin/python3 python3 "$PY3_BIN" 10; \
+        update-alternatives --set python3 "$PY3_BIN"; \
+    fi \
+    && if [ -n "$PY3_BIN" ] && [ ! -x /usr/bin/python ]; then ln -s "$PY3_BIN" /usr/bin/python; fi
 
 ENV VCPKG_ROOT=/usr/local/vcpkg
 # this must be set on arm. see https://learn.microsoft.com/en-us/vcpkg/users/config-environment#vcpkg_force_system_binaries
