@@ -3,7 +3,7 @@
 This container image has CMake and other utilities and libraries installed for
 cross-compiling Ziti projects. The image is
 automatically published to Docker Hub as
-[hanzozt/ziti-builder:main](https://hub.docker.com/r/hanzozt/ziti-builder) when merging to `main`.
+[hanzozt/zt-builder:main](https://hub.docker.com/r/hanzozt/zt-builder) when merging to `main`.
 
 Finalized releases are published as semver tags (e.g. `v3.0.4`) and the Docker image is tagged accordingly (e.g. `:3.0.4`, `:v3`). The `:latest` tag is only updated for the highest semver release.
 
@@ -22,7 +22,7 @@ to build the project.
 
 ```bash
 # optionally substitute podman or nerdctl for docker
-docker build . --tag ziti-builder-test
+docker build . --tag zt-builder-test
 ```
 
 ### Run the local test image to cross-compile a Ziti project
@@ -38,7 +38,7 @@ docker run \
     --rm \
     --user="${UID}" \
     --volume="${PWD}:/github/workspace" \
-    ziti-builder-test ./ziti-builder.sh
+    zt-builder-test ./zt-builder.sh
 ```
 
 ### Publish the image to Docker Hub
@@ -52,7 +52,7 @@ docker run \
 
 Ziti projects that build with this image will produce artifacts that require a GLIBC version greater than or equal to the version of GLIBC installed in the image.
 
-| ziti-builder Version | Ubuntu Release | GLIBC Version       | libssl Version                   |
+| zt-builder Version | Ubuntu Release | GLIBC Version       | libssl Version                   |
 |---------------------|---------------|---------------------|----------------------------------|
 | v1                  | bionic        | 2.27-3ubuntu1.6     | 1.1.1-1ubuntu2.1~18.04.23        |
 | v2                  | focal         | 2.31-0ubuntu9.17    | 1.1.1f-1ubuntu2.24               |

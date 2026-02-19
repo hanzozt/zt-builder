@@ -22,9 +22,9 @@ ENV TZ=UTC
 ENV PATH="/usr/local/:${PATH}"
 # used by git to find global config in container that is writable by the
 # developer's UID
-ENV GIT_CONFIG_GLOBAL="/ziti-builder-gitconfig"
+ENV GIT_CONFIG_GLOBAL="/zt-builder-gitconfig"
 # used by build scripts to detect running in docker
-ENV BUILD_ENVIRONMENT="ziti-builder-docker"
+ENV BUILD_ENVIRONMENT="zt-builder-docker"
 
 RUN apt-get update \
     && apt-get --yes --quiet --no-install-recommends install \
