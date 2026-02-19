@@ -3,7 +3,7 @@
 This container image has CMake and other utilities and libraries installed for
 cross-compiling Ziti projects. The image is
 automatically published to Docker Hub as
-[openziti/ziti-builder:main](https://hub.docker.com/r/openziti/ziti-builder) when merging to `main`.
+[hanzozt/ziti-builder:main](https://hub.docker.com/r/hanzozt/ziti-builder) when merging to `main`.
 
 Finalized releases are published as semver tags (e.g. `v3.0.4`) and the Docker image is tagged accordingly (e.g. `:3.0.4`, `:v3`). The `:latest` tag is only updated for the highest semver release.
 

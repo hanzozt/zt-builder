@@ -1,4 +1,4 @@
-# Releasing `openziti/ziti-builder`
+# Releasing `hanzozt/ziti-builder`
 
 This repo publishes the Ziti builder container image to Docker Hub.
 
@@ -101,22 +101,22 @@ This prevents out-of-band hotfix releases (e.g. publishing `v1.0.15` after `v3.0
 2. Confirm the draft release notes (Release Drafter updates the draft automatically).
 3. Finalize the release by creating/publishing a GitHub Release with a new tag `v3.x.y`.
 4. The `Docker` workflow builds and pushes:
-   - `openziti/ziti-builder:3.x.y`
-   - `openziti/ziti-builder:v3`
-   - `openziti/ziti-builder:latest` (only if it’s the highest published semver)
+   - `hanzozt/ziti-builder:3.x.y`
+   - `hanzozt/ziti-builder:v3`
+   - `hanzozt/ziti-builder:latest` (only if it’s the highest published semver)
 
 ### Maintenance/hotfix release (via `v1`)
 
 1. Merge changes into the `v1` branch.
    - This publishes preview images:
-     - `openziti/ziti-builder:v1-dev`
-     - `openziti/ziti-builder:v1-<sha>`
-   - The stable `openziti/ziti-builder:v1` is **not** updated yet.
+     - `hanzozt/ziti-builder:v1-dev`
+     - `hanzozt/ziti-builder:v1-<sha>`
+   - The stable `hanzozt/ziti-builder:v1` is **not** updated yet.
 2. Confirm the Release Drafter draft version is correct for the next patch (e.g. `v1.0.15`).
 3. Finalize by creating/publishing a GitHub Release with tag `v1.0.15`.
 4. The tag push triggers Docker publishing of:
-   - `openziti/ziti-builder:1.0.15`
-   - `openziti/ziti-builder:v1`
+   - `hanzozt/ziti-builder:1.0.15`
+   - `hanzozt/ziti-builder:v1`
 
 The release will **not** be marked as GitHub “Latest” unless it is the highest published semver.
 
